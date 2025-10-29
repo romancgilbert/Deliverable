@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.23">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Roulette &amp; The Martingale Betting Strategy</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="Deliverable_files/libs/clipboard/clipboard.min.js"></script>
+<script src="Deliverable_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="Deliverable_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="Deliverable_files/libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="Deliverable_files/libs/quarto-html/popper.min.js"></script>
+<script src="Deliverable_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="Deliverable_files/libs/quarto-html/anchor.min.js"></script>
+<link href="Deliverable_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="Deliverable_files/libs/quarto-html/quarto-syntax-highlighting-1fe81d0376b2c50856e68e651e390326.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="Deliverable_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="Deliverable_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="Deliverable_files/libs/bootstrap/bootstrap-d6a003b94517c951b2d65075d42fb01b.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Roulette &amp; The Martingale Betting Strategy</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://res.cloudinary.com/kalispel/image/upload/f_auto,q_auto/v1714690433/Craft%20Images/Roulette_header_2750x1600_jsg1ap.jpg" class="img-fluid figure-img"></p>
+<figcaption>Picture of Roulette wheel</figcaption>
+</figure>
+</div>
+<p>If you’ve ever been in a casino (or watched someone play roulette), you’ve probably heard of the <strong>Martingale strategy</strong>; the “foolproof” system where you double your bet after every loss until you win it all back. It sounds unstoppable, but there’s a catch: you can run out of money long before you win.</p>
+<p>The goal of this project is to test that idea using <strong>computer simulation</strong>. By coding a virtual roulette table and simulating thousands of gamblers, I can track how their budgets rise and fall, how often they go broke, and how much they win or lose on average. By changing a few parameters-like the starting budget, win goal, or table limit—I can see how those factors affect profitability.</p>
+<p>In the end, I wanted to answer one simple question with data, not intuition:<br>
+<strong>Is the Martingale strategy actually profitable, or is it just a fast way to lose money?</strong></p>
+<section id="what-is-probability" class="level2">
+<h2 class="anchored" data-anchor-id="what-is-probability">What is probability?</h2>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://images.squarespace-cdn.com/content/v1/54905286e4b050812345644c/1609608174920-34RZY6EW61N8185W83LY/Rule2.jpg?format=2500w" class="img-fluid figure-img"></p>
+<figcaption>Visual of coin flip probability</figcaption>
+</figure>
+</div>
+<p><strong>Probability</strong> is the math of chance. It tells us how likely something is to happen.<br>
+Flip a coin, and you have a 50% chance of getting heads. Roll a six-sided die, and each number has a 1 in 6 chance of appearing.</p>
+<p>Probability assigns a number between <strong>0 and 1</strong> to an event:</p>
+<ul>
+<li>0 means it’s impossible</li>
+<li>1 means it’s guaranteed</li>
+<li>Anything in between shows how likely it is</li>
+</ul>
+<p>In games like <strong>roulette</strong>, probability helps us understand how often certain outcomes occur over many spins, even though each spin is random. It’s what separates <strong>luck</strong> from <strong>statistics</strong>.</p>
+</section>
+<section id="what-is-the-martingale-strategy" class="level2">
+<h2 class="anchored" data-anchor-id="what-is-the-martingale-strategy">What is the Martingale strategy?</h2>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://mindyourdecisions.com/blog/wp-content/uploads/2017/01/martingale-betting.png" class="img-fluid figure-img"></p>
+<figcaption>Visual representation of the martingale strategy</figcaption>
+</figure>
+</div>
+<p>The Martingale strategy works like this: every time you lose, you <strong>double your next bet</strong> so that when you finally win, you recover all your losses plus a small profit.</p>
+<p>Example:</p>
+<ul>
+<li>Bet $1 on red and win → gain $1, restart</li>
+<li>Lose → bet $2<br>
+</li>
+<li>Lose again → bet $4</li>
+<li>Keep doubling until you win</li>
+</ul>
+<p>It feels like a guaranteed win, but long losing streaks make bets grow faster than your wallet. Most players eventually hit the <strong>table limit</strong> or go broke.</p>
+<p>That’s why I used a simulation — to see what really happens when this system plays out over thousands of games.</p>
+</section>
+<section id="simulating-the-martingale-strategy-in-python" class="level2">
+<h2 class="anchored" data-anchor-id="simulating-the-martingale-strategy-in-python">Simulating the Martingale strategy in Python</h2>
+<p>Rather than risk real money, I let Python handle the gambling. Each simulation follows this logic:</p>
+<ol type="1">
+<li>Start with a set <strong>budget</strong><br>
+</li>
+<li>Bet $1 on red<br>
+</li>
+<li>Win → earn that amount and start over<br>
+</li>
+<li>Lose → double the next bet<br>
+</li>
+<li>Stop if the player reaches their win goal, hits the table limit, or runs out of money</li>
+</ol>
+<p>By repeating this process thousands of times, I can track how the gambler’s <strong>budget changes</strong> after each play and measure whether the strategy actually leads to profit or just delays inevitable losses.</p>
+</section>
+<section id="lets-walk-through-the-code" class="level2">
+<h2 class="anchored" data-anchor-id="lets-walk-through-the-code">Lets walk through the code</h2>
+<section id="imports" class="level3">
+<h3 class="anchored" data-anchor-id="imports">Imports</h3>
+<div id="29922aa3" class="cell" data-execution_count="1">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> itertools <span class="im">import</span> groupby</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<ul>
+<li>The numpy library is used for generating random outcomes (the roulette spins).</li>
+<li>The groupby library helps measure consecutive streaks of results (like losing streaks).</li>
+<li>The matplotlib.pyplot library is used for plotting data (graphs of budget over time).</li>
+<li>The pandas library could be used for data manipulation later (though not directly here).</li>
+</ul>
+</section>
+</section>
+<section id="defining-the-main-function" class="level2">
+<h2 class="anchored" data-anchor-id="defining-the-main-function">Defining the main function</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> oneplay(B<span class="op">=</span><span class="dv">200</span>, W<span class="op">=</span><span class="dv">300</span>, L<span class="op">=</span><span class="dv">200</span>, M<span class="op">=</span><span class="dv">100</span>, summary<span class="op">=</span><span class="va">True</span>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>This defines one simulation of a single gambler playing roulette with the Martingale strategy. - B – starting budget (how much money the gambler begins with). - W – win goal (the budget amount the gambler stops at if they reach it). - L – limit on the number of spins (the gambler stops after this many plays even if they haven’t won or gone broke). - M – maximum wager allowed (the casino’s table limit). - summary – whether to return a detailed history (False) or just a summary (True).</p>
+</section>
+<section id="inner-function-wager" class="level2">
+<h2 class="anchored" data-anchor-id="inner-function-wager">Inner Function wager()</h2>
+<div id="74ef516c" class="cell" data-execution_count="2">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> wager(ledger):</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> ledger[<span class="st">"outcome"</span>][<span class="op">-</span><span class="dv">1</span>] <span class="op">==</span> <span class="dv">1</span>:</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>        new_wager <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        new_wager <span class="op">=</span> <span class="bu">min</span>(<span class="dv">2</span><span class="op">*</span>ledger[<span class="st">"wager"</span>][<span class="op">-</span><span class="dv">1</span>], M, ledger[<span class="st">"budget"</span>][<span class="op">-</span><span class="dv">1</span>])</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    ledger[<span class="st">"wager"</span>].append(new_wager)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>This handles how much the gambler bets next:</p>
+<ul>
+<li>If the last outcome was a <strong>win (1)</strong>, start over and bet <strong>$1</strong>.<br>
+</li>
+<li>If the last outcome was a <strong>loss (0)</strong>, double the previous wager (<strong>Martingale rule</strong>).</li>
+</ul>
+<p>However, the bet can’t exceed:</p>
+<ul>
+<li>The <strong>table limit (M)</strong><br>
+</li>
+<li>Or the gambler’s <strong>remaining money (<code>budget[-1]</code>)</strong></li>
+</ul>
+<p>Then it adds that new wager to the record (<strong><code>ledger</code></strong>).</p>
+</section>
+<section id="inner-function-spin" class="level1">
+<h1>Inner Function: spin()</h1>
+<div id="b2f247e3" class="cell" data-execution_count="3">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> spin(ledger):</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    spin <span class="op">=</span> np.random.binomial(<span class="dv">1</span>, p <span class="op">=</span> <span class="dv">18</span><span class="op">/</span><span class="dv">38</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    ledger[<span class="st">"outcome"</span>].append(spin)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>This simulates one roulette spin:</p>
+<p>Roulette has <strong>18 red</strong>, <strong>18 black</strong>, and <strong>2 green</strong> pockets →<br>
+probability of red ≈ <strong>18/38</strong>.</p>
+<p>Using <code>np.random.binomial(1, p=18/38)</code> returns:</p>
+<ul>
+<li><strong>1 = win</strong> (ball lands on red)<br>
+</li>
+<li><strong>0 = loss</strong> (ball lands on black or green)</li>
+</ul>
+<p>Each spin’s result (<code>1</code> or <code>0</code>) is recorded in the <code>ledger["outcome"]</code> list.</p>
+<section id="inner-function-stop_rule" class="level2">
+<h2 class="anchored" data-anchor-id="inner-function-stop_rule">Inner Function stop_rule()</h2>
+<div id="fc745ce1" class="cell" data-execution_count="4">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> stop_rule(ledger):</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> ledger[<span class="st">"outcome"</span>][<span class="op">-</span><span class="dv">1</span>] <span class="op">==</span> <span class="dv">1</span>:</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>        ledger[<span class="st">"budget"</span>].append(ledger[<span class="st">"budget"</span>][<span class="op">-</span><span class="dv">1</span>] <span class="op">+</span> ledger[<span class="st">"wager"</span>][<span class="op">-</span><span class="dv">1</span>])</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        ledger[<span class="st">"budget"</span>].append(ledger[<span class="st">"budget"</span>][<span class="op">-</span><span class="dv">1</span>] <span class="op">-</span> ledger[<span class="st">"wager"</span>][<span class="op">-</span><span class="dv">1</span>])</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> ledger[<span class="st">"budget"</span>][<span class="op">-</span><span class="dv">1</span>] <span class="op">&gt;=</span> W:</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>        outcome <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">elif</span> <span class="bu">len</span>(ledger[<span class="st">"budget"</span>]) <span class="op">-</span> <span class="dv">1</span> <span class="op">&gt;=</span> L:</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>        outcome <span class="op">=</span> <span class="op">-</span><span class="dv">1</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">elif</span> ledger[<span class="st">"budget"</span>][<span class="op">-</span><span class="dv">1</span>] <span class="op">&lt;=</span> <span class="dv">0</span>:</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>        outcome <span class="op">=</span> <span class="op">-</span><span class="dv">2</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>        outcome <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> outcome</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>This function: - <strong>Updates the budget</strong> after each spin: - <strong>Win →</strong> add wager to budget<br>
+- <strong>Loss →</strong> subtract wager from budget</p>
+<ul>
+<li><strong>Checks stop conditions:</strong>
+<ul>
+<li><strong>≥ W →</strong> the gambler reached their goal → return <code>1</code><br>
+</li>
+<li><strong>≥ L plays →</strong> hit the maximum number of spins → return <code>-1</code><br>
+</li>
+<li><strong>≤ 0 →</strong> went broke → return <code>-2</code></li>
+</ul></li>
+</ul>
+<p>Otherwise → continue playing (<code>0</code>).</p>
+<p>The returned outcome tells whether to <strong>keep looping or stop</strong>.</p>
+</section>
+<section id="main-simulation-loop" class="level2">
+<h2 class="anchored" data-anchor-id="main-simulation-loop">Main Simulation Loop</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>ledger <span class="op">=</span> {<span class="st">"budget"</span>:[B, B], <span class="st">"wager"</span>:[<span class="dv">0</span>], <span class="st">"outcome"</span>:[<span class="dv">1</span>]}</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>outcome <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> outcome <span class="op">==</span> <span class="dv">0</span>:</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    wager(ledger)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    spin(ledger)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    outcome <span class="op">=</span> stop_rule(ledger)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="cf">pass</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>ledger</code> tracks the gambler’s progress:</p>
+<ul>
+<li><strong>“budget”</strong> starts as <code>[B, B]</code> → redundant first entry for setup.<br>
+</li>
+<li><strong>“wager”</strong> starts at <code>[0]</code>.<br>
+</li>
+<li><strong>“outcome”</strong> starts with <code>[1]</code> so the first wager is <code>$1</code> (since the code looks at the last outcome).</li>
+</ul>
+<p>The loop keeps playing until one of the stop conditions returns a nonzero outcome.</p>
+<p>Each round:</p>
+<ol type="1">
+<li>Decide the wager.<br>
+</li>
+<li>Spin the wheel.<br>
+</li>
+<li>Update budget and check if we should stop.</li>
+</ol>
+</section>
+<section id="returning-results" class="level2">
+<h2 class="anchored" data-anchor-id="returning-results">Returning results</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> summary <span class="op">==</span> <span class="va">False</span>:</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> ledger</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>If you want every detail of the play (every wager and outcome), return the full ledger.</p>
+<p>Otherwise, continue to summarize the results.</p>
+</section>
+<section id="calculate-losing-streaks-and-summary" class="level2">
+<h2 class="anchored" data-anchor-id="calculate-losing-streaks-and-summary">Calculate losing streaks and summary</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>bad_luck <span class="op">=</span> <span class="bu">max</span>([<span class="bu">len</span>(<span class="bu">list</span>(values)) <span class="cf">for</span> key, values <span class="kw">in</span> groupby(ledger[<span class="st">"outcome"</span>]) <span class="cf">if</span> key <span class="op">==</span> <span class="dv">0</span>])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>This finds the longest losing streak by grouping consecutive 0s in the outcome list.</p>
+</section>
+<section id="return-summary-dictionary" class="level2">
+<h2 class="anchored" data-anchor-id="return-summary-dictionary">Return summary dictionary</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>summary <span class="op">=</span> {</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>      <span class="st">"B"</span>:B</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    , <span class="st">"W"</span>:W</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    , <span class="st">"L"</span>:L</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    , <span class="st">"M"</span>:M</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    , <span class="st">"outcome"</span>:outcome</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    , <span class="st">"profit"</span>:ledger[<span class="st">"budget"</span>][<span class="op">-</span><span class="dv">1</span>] <span class="op">-</span> B</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    , <span class="st">"n_games"</span>:<span class="bu">len</span>(ledger[<span class="st">"budget"</span>]) <span class="op">-</span> <span class="dv">1</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    , <span class="st">"prop_red"</span>:np.mean(ledger[<span class="st">"outcome"</span>])</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    , <span class="st">"bad_luck_streak"</span>: bad_luck</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="cf">return</span> summary</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>This returns a compact overview of the simulation:</p>
+<ul>
+<li><strong>B, W, L, M:</strong> parameters used.</li>
+<li><strong>outcome:</strong> <code>1</code> (won), <code>-1</code> (hit spin limit), or <code>-2</code> (went broke).<br>
+</li>
+<li><strong>profit:</strong> final money minus starting money.<br>
+</li>
+<li><strong>n_games:</strong> total number of spins played.<br>
+</li>
+<li><strong>prop_red:</strong> proportion of spins that landed on red (should be close to <code>18/38 ≈ 0.47</code>).<br>
+</li>
+<li><strong>bad_luck_streak:</strong> longest sequence of losses in that run.</li>
+</ul>
+</section>
+<section id="visualizing-gambler-budgets-over-time" class="level2">
+<h2 class="anchored" data-anchor-id="visualizing-gambler-budgets-over-time">Visualizing gambler budgets over time</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>np.random.seed(<span class="dv">20250925</span>) <span class="co"># DO NOT USE THE SAME SEED FOR YOUR DELIVERABLE</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>plt.close()</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">5</span>):</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    p1 <span class="op">=</span> oneplay(summary<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    plt.plot(p1[<span class="st">"budget"</span>])</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>plt.ylim([<span class="op">-</span><span class="dv">10</span>, <span class="dv">310</span>])</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Spin number"</span>)</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Budget"</span>)</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">"Simulated Martingale Strategy for Five Gamblers"</span>)</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The above block generates the first figure for the simulation.</p>
+<ul>
+<li>np.random.seed(20250925) sets a seed so the results are reproducible</li>
+<li>The for loop runs five simulations, each representing one gambler using the Martingale strategy.</li>
+<li>plt.plot(p1[“budget”]) traces how each gambler’s budget changes after each spin.</li>
+<li>The y-axis is limited from -$10 to $310 for consistency.</li>
+</ul>
+<p>Each line on the graph represents one gambler’s journey. Some gamblers reach the $300 goal quickly, while others crash to $0 after a losing streak. This plot shows how unpredictable the system can be — most lines bounce between small wins and losses until one unlucky streak causes a sharp drop.</p>
+</section>
+<section id="calculating-average-profit-across-many-simulations" class="level2">
+<h2 class="anchored" data-anchor-id="calculating-average-profit-across-many-simulations">Calculating average profit across many simulations</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> itertools <span class="im">import</span> groupby</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>R <span class="op">=</span> <span class="dv">10000</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>A <span class="op">=</span> [oneplay() <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(R)]</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>B <span class="op">=</span> pd.DataFrame(A)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>B.profit.mean().item()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Here we simulate 10,000 gamblers using the Martingale strategy and record their results. Each run of oneplay() produces one gambler’s outcome (profit, number of spins, and whether they went broke).</p>
+<p>pd.DataFrame(A) stores all the runs in a table, and B.profit.mean() calculates the average profit across every gambler.</p>
+<p>The result is slightly negative, showing that even though some gamblers win, the average outcome is a loss. This confirms that the Martingale strategy can’t overcome the built-in house edge of roulette.</p>
+</section>
+<section id="changing-the-win-goal-parameter" class="level2">
+<h2 class="anchored" data-anchor-id="changing-the-win-goal-parameter">Changing the win goal parameter</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> martingale <span class="im">import</span> oneplay</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> itertools <span class="im">import</span> groupby</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>R <span class="op">=</span> <span class="dv">40000</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>A <span class="op">=</span> [oneplay(W <span class="op">=</span> <span class="dv">200</span> <span class="op">+</span> j) <span class="cf">for</span> j <span class="kw">in</span> [<span class="dv">25</span>, <span class="dv">50</span>, <span class="dv">75</span>, <span class="dv">100</span>, <span class="dv">125</span>, <span class="dv">150</span>] <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(R)]</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>B <span class="op">=</span> pd.DataFrame(A)</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>C <span class="op">=</span> B.pivot_table(values<span class="op">=</span><span class="st">"profit"</span>, index <span class="op">=</span> <span class="st">"W"</span>).reset_index()</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>plt.close()</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>C.assign(walk_away_rule <span class="op">=</span> C.W <span class="op">-</span> <span class="dv">200</span>).plot(x<span class="op">=</span><span class="st">"walk_away_rule"</span>, y <span class="op">=</span> <span class="st">"profit"</span>, legend <span class="op">=</span> <span class="va">False</span>)</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Winning threshold"</span>)</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Average profit"</span>)</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>In this final experiment, we change the win goal (W) — how much the gambler hopes to win before walking away — to see if that affects profitability. The code runs 40,000 simulations for each goal: $225, $250, $275, $300, $325, and $350. After averaging the profits for each win goal, we plot the results.</p>
+<p>The line stays below zero, meaning that changing how much you aim to win does not make the strategy profitable. No matter how ambitious or conservative the gambler is, the average result is still a loss.</p>
+<p>Now that I have explained all of the code needed, below is the completed code.</p>
+<div id="d1e874d8" class="cell" data-execution_count="5">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> oneplay(B<span class="op">=</span><span class="dv">200</span>, W<span class="op">=</span><span class="dv">300</span>, L<span class="op">=</span><span class="dv">200</span>, M<span class="op">=</span><span class="dv">100</span>, summary <span class="op">=</span> <span class="va">True</span>):</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># martingale</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> wager(ledger):</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> ledger[<span class="st">"outcome"</span>][<span class="op">-</span><span class="dv">1</span>] <span class="op">==</span> <span class="dv">1</span>:</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>            new_wager <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>            new_wager <span class="op">=</span> <span class="bu">min</span>(<span class="dv">2</span><span class="op">*</span>ledger[<span class="st">"wager"</span>][<span class="op">-</span><span class="dv">1</span>], M, ledger[<span class="st">"budget"</span>][<span class="op">-</span><span class="dv">1</span>])</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>        ledger[<span class="st">"wager"</span>].append(new_wager)</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> spin(ledger):</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>        spin <span class="op">=</span> np.random.binomial(<span class="dv">1</span>, p <span class="op">=</span> <span class="dv">18</span><span class="op">/</span><span class="dv">38</span>)</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>        ledger[<span class="st">"outcome"</span>].append(spin)</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> stop_rule(ledger):</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> ledger[<span class="st">"outcome"</span>][<span class="op">-</span><span class="dv">1</span>] <span class="op">==</span> <span class="dv">1</span>:</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>            ledger[<span class="st">"budget"</span>].append(ledger[<span class="st">"budget"</span>][<span class="op">-</span><span class="dv">1</span>] <span class="op">+</span> ledger[<span class="st">"wager"</span>][<span class="op">-</span><span class="dv">1</span>])</span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>            ledger[<span class="st">"budget"</span>].append(ledger[<span class="st">"budget"</span>][<span class="op">-</span><span class="dv">1</span>] <span class="op">-</span> ledger[<span class="st">"wager"</span>][<span class="op">-</span><span class="dv">1</span>])</span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> ledger[<span class="st">"budget"</span>][<span class="op">-</span><span class="dv">1</span>] <span class="op">&gt;=</span> W:</span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>            outcome <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>        <span class="cf">elif</span> <span class="bu">len</span>(ledger[<span class="st">"budget"</span>]) <span class="op">-</span> <span class="dv">1</span> <span class="op">&gt;=</span> L:</span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>            outcome <span class="op">=</span> <span class="op">-</span><span class="dv">1</span></span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>        <span class="cf">elif</span> ledger[<span class="st">"budget"</span>][<span class="op">-</span><span class="dv">1</span>] <span class="op">&lt;=</span> <span class="dv">0</span>:</span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>            outcome <span class="op">=</span> <span class="op">-</span><span class="dv">2</span></span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>            outcome <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> outcome</span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ledger</span></span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>    ledger <span class="op">=</span> {<span class="st">"budget"</span>:[B, B], <span class="st">"wager"</span>:[<span class="dv">0</span>], <span class="st">"outcome"</span>:[<span class="dv">1</span>]}</span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a>    outcome <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> outcome <span class="op">==</span> <span class="dv">0</span>:</span>
+<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a>        wager(ledger)</span>
+<span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a>        spin(ledger)</span>
+<span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a>        outcome <span class="op">=</span> stop_rule(ledger)</span>
+<span id="cb13-38"><a href="#cb13-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-39"><a href="#cb13-39" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> summary <span class="op">==</span> <span class="va">False</span>:</span>
+<span id="cb13-40"><a href="#cb13-40" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> ledger</span>
+<span id="cb13-41"><a href="#cb13-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-42"><a href="#cb13-42" aria-hidden="true" tabindex="-1"></a>    bad_luck <span class="op">=</span> <span class="bu">max</span>([<span class="bu">len</span>(<span class="bu">list</span>(values)) <span class="cf">for</span> key, values <span class="kw">in</span> groupby(ledger[<span class="st">"outcome"</span>]) <span class="cf">if</span> key <span class="op">==</span> <span class="dv">0</span>])</span>
+<span id="cb13-43"><a href="#cb13-43" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb13-44"><a href="#cb13-44" aria-hidden="true" tabindex="-1"></a>    summary <span class="op">=</span> {</span>
+<span id="cb13-45"><a href="#cb13-45" aria-hidden="true" tabindex="-1"></a>          <span class="st">"B"</span>:B</span>
+<span id="cb13-46"><a href="#cb13-46" aria-hidden="true" tabindex="-1"></a>        , <span class="st">"W"</span>:W</span>
+<span id="cb13-47"><a href="#cb13-47" aria-hidden="true" tabindex="-1"></a>        , <span class="st">"L"</span>:L</span>
+<span id="cb13-48"><a href="#cb13-48" aria-hidden="true" tabindex="-1"></a>        , <span class="st">"M"</span>:M</span>
+<span id="cb13-49"><a href="#cb13-49" aria-hidden="true" tabindex="-1"></a>        , <span class="st">"outcome"</span>:outcome</span>
+<span id="cb13-50"><a href="#cb13-50" aria-hidden="true" tabindex="-1"></a>        , <span class="st">"profit"</span>:ledger[<span class="st">"budget"</span>][<span class="op">-</span><span class="dv">1</span>] <span class="op">-</span> B</span>
+<span id="cb13-51"><a href="#cb13-51" aria-hidden="true" tabindex="-1"></a>        , <span class="st">"n_games"</span>:<span class="bu">len</span>(ledger[<span class="st">"budget"</span>]) <span class="op">-</span> <span class="dv">1</span></span>
+<span id="cb13-52"><a href="#cb13-52" aria-hidden="true" tabindex="-1"></a>        , <span class="st">"prop_red"</span>:np.mean(ledger[<span class="st">"outcome"</span>])</span>
+<span id="cb13-53"><a href="#cb13-53" aria-hidden="true" tabindex="-1"></a>        , <span class="st">"bad_luck_streak"</span>: bad_luck</span>
+<span id="cb13-54"><a href="#cb13-54" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb13-55"><a href="#cb13-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-56"><a href="#cb13-56" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> summary</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<pre class="{markdown}"><code>
+::: {#3b09d5a9 .cell execution_count=6}
+``` {.python .cell-code}
+import numpy as np
+import matplotlib.pyplot as plt
+np.random.seed(20251003) 
+plt.close()
+for i in range(5):
+    p1 = oneplay(summary = False)
+    plt.plot(p1["budget"])
+plt.ylim([-10, 310])
+plt.xlabel("Spin number")
+plt.ylabel("Budget")
+plt.show()</code></pre>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Deliverable_files/figure-html/cell-7-output-1.png" width="593" height="429" class="figure-img"></p>
+</figure>
+</div>
+</div>
+<p>:::</p>
+<div id="9ef1e717" class="cell" data-execution_count="7">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> itertools <span class="im">import</span> groupby</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>R <span class="op">=</span> <span class="dv">10000</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>A <span class="op">=</span> [oneplay() <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(R)]</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>B <span class="op">=</span> pd.DataFrame(A)</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>B.profit.mean().item()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="7">
+<pre><code>-35.3235</code></pre>
+</div>
+</div>
+<div id="d34220c5" class="cell" data-execution_count="8">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>R <span class="op">=</span> <span class="dv">40000</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>A <span class="op">=</span> [oneplay(W <span class="op">=</span> <span class="dv">200</span> <span class="op">+</span> j) <span class="cf">for</span> j <span class="kw">in</span> [<span class="dv">25</span>, <span class="dv">50</span>, <span class="dv">75</span>, <span class="dv">100</span>, <span class="dv">125</span>, <span class="dv">150</span>] <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(R)]</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>B <span class="op">=</span> pd.DataFrame(A)</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>C <span class="op">=</span> B.pivot_table(values<span class="op">=</span><span class="st">"profit"</span>, index <span class="op">=</span> <span class="st">"W"</span>).reset_index()</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>plt.close()</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>C.assign(walk_away_rule <span class="op">=</span> C.W <span class="op">-</span> <span class="dv">200</span>).plot(x<span class="op">=</span><span class="st">"walk_away_rule"</span>, y <span class="op">=</span> <span class="st">"profit"</span>, legend <span class="op">=</span> <span class="va">False</span>)</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Winning threshold"</span>)</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Average profit"</span>)</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Deliverable_files/figure-html/cell-9-output-1.png" width="596" height="429" class="figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="take-home-message" class="level2">
+<h2 class="anchored" data-anchor-id="take-home-message">Take-Home Message</h2>
+<p>After thousands of simulated spins, the results are clear:<br>
+the Martingale strategy <strong>is not actually profitable</strong>.</p>
+<p>While it can create the illusion of quick wins, long losing streaks cause bets to double so rapidly that players hit the table limit or run out of money before recovering their losses. The average profit across all simulations remains <strong>slightly negative</strong>, proving that no amount of doubling can overcome the casino’s built; in house edge.</p>
+<p>In other words, the Martingale doesn’t beat the system; it just delays the inevitable.<br>
+It’s not a path to wealth, but a reminder that probability, not luck, always wins in the long run.</p>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
